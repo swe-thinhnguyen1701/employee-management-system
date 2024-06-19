@@ -2,7 +2,7 @@ const { Pool } = require("pg");
 class Crud {
     constructor(userName, password) {
         this.DATA_TABLE = ["departments", "roles", "employees"];
-        this.TABLE_TITLE = ["ID      Department\n--      ---------\n"];
+        this.TABLE_TITLE = ["ID      Department\n--      ---------"];
         this.SQL_COMMANDS = ["SELECT * FROM departments"];
         this.pool = new Pool({
             user: `${userName}`,
@@ -29,7 +29,7 @@ class Crud {
     setContent (data) {
         let tableContent = "";
         for (let obj of data) {
-            tableContent += `${obj.id}      ${obj.name}\n`;
+            tableContent += `${obj.id}        ${obj.name}\n`;
         }
 
         return tableContent;
