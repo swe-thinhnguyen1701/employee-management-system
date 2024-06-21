@@ -1,10 +1,8 @@
 /** npm packages **/
 const inquirer = require("inquirer");
 const colors = require("colors");
-const { Pool } = require("pg");
 const Crud = require("./libs/Crud");
 const Menu = require("./libs/Menu");
-const { client_encoding } = require("pg/lib/defaults");
 
 const crud = new Crud("postgres", "P@$$word170195");
 const menu = new Menu();
@@ -28,7 +26,7 @@ const addNewDataPrompt = async (id) => {
     let newData = [];
     if(id == 0) newData = await addNewDepartment();
     else if (id == 1) newData = await addNewRole();
-
+    else nemData = await addNewEmployee();
     return newData;
 }
 
@@ -77,6 +75,48 @@ const addNewRole = async () => {
     return [`'${res.roleTitle}'`, parseFloat(res.roleSalary), (departmentList.indexOf(res.roleDepartment) + 1)];
 }
 
+const addNewEmployee = async () => {
+    const roleList = await crud.getRoleList();
+    const managerList = await crud.getEmployeeList();
+    console.log(managerList);
+    console.log(sections[6]);
+    const nameValidation = async (name) => {
+        if(name.length > 30){
+            console.log(`${colors.red(name)} has more than 30 characters`);
+            return false;
+        }  
+        return true;
+    }
+    const res = await inquirer.prompt([
+        {
+            type: "input",
+            name: "firstName",
+            message: "What is his/her first name?",
+            validate: nameValidation
+        },
+        {
+            type: "input",
+            name: "lastName",
+            message: "What is his/her last name?",
+            validate: nameValidation
+        },
+        {
+            type: "list",
+            name: "roleTitle",
+            choices: roleList,
+            message: "Select role title:"
+        },
+        {
+            type: "list",
+            name: "managerName",
+            choices: managerList,
+            message: "Select manager name: "
+        }
+    ]);
+    const managerID = res.managerName !== "None" ? managerList.indexOf(res.managerName) + 1 : null;
+    return [`'${res.firstName}'`, `'${res.lastName}'`, roleList.indexOf(res.roleTitle) + 1, managerID];
+}
+
 const driver = async () => {
     try {
         let isRunning = true;
@@ -91,8 +131,8 @@ const driver = async () => {
                 const newData = await addNewDataPrompt(dataService.id);
                 // console.log(`${newData.join()} is added\n\n`);
                 menu.resetDataService();
-                const message = await crud.addData(dataService.id, `${newData}`);
-                console.log(message);
+                // const message = await crud.addData(dataService.id, `${newData}`);
+                console.log(newData);
             } else if (dataService.id != -1) {
                 await crud.setData(dataService.id);
                 const data = crud.getData();

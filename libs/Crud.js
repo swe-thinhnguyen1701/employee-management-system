@@ -54,8 +54,8 @@ class Crud {
     }
 
     getEmployeeList = async () => {
-        const list = [];
-        const { rows } = await this.pool.query(`SELECT CONCAT(employees.first_name, ' ', employees.last_name) AS managers FROM employees`);
+        const list = ["None"];
+        const { rows } = await this.pool.query(`SELECT CONCAT(employees.first_name, ' ', employees.last_name) AS name FROM employees`);
         for(let manager of rows){
             list.push(manager.name);
         }
