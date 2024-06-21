@@ -22,15 +22,15 @@ const prompt = async () => {
     menu.setDataService(res.option);
 }
 
-const addNewDataPrompt = async (id) => {
+const getNewData = async (id) => {
     let newData = [];
-    if(id == 0) newData = await addNewDepartment();
-    else if (id == 1) newData = await addNewRole();
-    else nemData = await addNewEmployee();
+    if (id == 0) newData = await newDepartmentPrompt();
+    else if (id == 1) newData = await newRolePrompt();
+    else newData = await newEmployeePrompt();
     return newData;
 }
 
-const addNewDepartment = async () => {
+const newDepartmentPrompt = async () => {
     console.log(sections[4]);
     const res = await inquirer.prompt([
         {
@@ -43,7 +43,7 @@ const addNewDepartment = async () => {
     return [`'${res.departmentName}'`];
 }
 
-const addNewRole = async () => {
+const newRolePrompt = async () => {
     const departmentList = await crud.getDepartmentList();
     console.log(sections[5]);
     const res = await inquirer.prompt([
@@ -57,7 +57,7 @@ const addNewRole = async () => {
             name: "roleSalary",
             message: "Enter salary amount: $",
             validate: async (input) => {
-                if(isNaN(parseFloat(input))){
+                if (isNaN(parseFloat(input))) {
                     console.log(`\n${colors.red(input)} is INVALID. Enter digit only`);
                     return false;
                 }
@@ -75,16 +75,15 @@ const addNewRole = async () => {
     return [`'${res.roleTitle}'`, parseFloat(res.roleSalary), (departmentList.indexOf(res.roleDepartment) + 1)];
 }
 
-const addNewEmployee = async () => {
+const newEmployeePrompt = async () => {
     const roleList = await crud.getRoleList();
     const managerList = await crud.getEmployeeList();
-    console.log(managerList);
     console.log(sections[6]);
     const nameValidation = async (name) => {
-        if(name.length > 30){
+        if (name.length > 30) {
             console.log(`${colors.red(name)} has more than 30 characters`);
             return false;
-        }  
+        }
         return true;
     }
     const res = await inquirer.prompt([
@@ -114,6 +113,7 @@ const addNewEmployee = async () => {
         }
     ]);
     const managerID = res.managerName !== "None" ? managerList.indexOf(res.managerName) + 1 : null;
+    console.log([`'${res.firstName}'`, `'${res.lastName}'`, roleList.indexOf(res.roleTitle) + 1, managerID]);
     return [`'${res.firstName}'`, `'${res.lastName}'`, roleList.indexOf(res.roleTitle) + 1, managerID];
 }
 
@@ -128,17 +128,16 @@ const driver = async () => {
                 // invoke modify data function
             } else if (dataService.addNewData) {
                 // invoke add new data funtion
-                const newData = await addNewDataPrompt(dataService.id);
-                // console.log(`${newData.join()} is added\n\n`);
+                const newData = await getNewData(dataService.id);
+                const message = await crud.addData(dataService.id, `${newData}`);
                 menu.resetDataService();
-                // const message = await crud.addData(dataService.id, `${newData}`);
-                console.log(newData);
+                console.log(message);
             } else if (dataService.id != -1) {
                 await crud.setData(dataService.id);
                 const data = crud.getData();
-                displayData(sections[dataService.id + 1], data);                
+                displayData(sections[dataService.id + 1], data);
             }
-            else isRunning = false;            
+            else isRunning = false;
         }
     } catch (error) {
         console.log(`${colors.red("ERROR occurs")}\n`, error);
