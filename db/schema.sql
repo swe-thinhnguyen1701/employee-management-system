@@ -21,7 +21,7 @@ create table employees (
     first_name varchar(30) not null,
     last_name varchar(30) not null,
     role_id integer,
-    manager_id integer,
+    manager_id integer default null,
     foreign key (role_id) references roles(id),
-    foreign key (manager_id) references employees(id)
+    foreign key (manager_id) references employees(id) ON DELETE SET NULL
 );
