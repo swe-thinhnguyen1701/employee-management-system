@@ -3,24 +3,26 @@ const inquirer = require("inquirer");
 const colors = require("colors");
 const Crud = require("./libs/Crud");
 const Menu = require("./libs/Menu");
+const Prompt = require("./libs/Prompt");
 
 const crud = new Crud("postgres", "P@$$word170195");
 const menu = new Menu();
+const prompt = new Prompt();
 const menuList = menu.getMenuList();
 const sections = menu.getSectionList();
 
-const prompt = async () => {
-    console.log(sections[0]);
-    const res = await inquirer.prompt([
-        {
-            type: "list",
-            name: "option",
-            choices: menuList,
-            message: "What would you like to do?"
-        }
-    ]);
-    menu.setDataService(res.option);
-}
+// const prompt = async () => {
+//     console.log(sections[0]);
+//     const res = await inquirer.prompt([
+//         {
+//             type: "list",
+//             name: "option",
+//             choices: menuList,
+//             message: "What would you like to do?"
+//         }
+//     ]);
+//     menu.setDataService(res.option);
+// }
 
 const getNewData = async (id) => {
     let newData = [];
@@ -144,26 +146,27 @@ const driver = async () => {
         let isRunning = true;
         // console.log(`${newData} line 60`);
         while (isRunning) {
-            await prompt();
-            const dataService = menu.getDataService();
-            if (dataService.modifyData) {
-                // invoke modify data function
-                const updateData = await updateEmployeeRole(dataService.id);
-                await crud.updateEmployeeRole(updateData[1]);
-                menu.resetDataService();
-                console.log();
-            } else if (dataService.addNewData) {
-                // invoke add new data funtion
-                const newData = await getNewData(dataService.id);
-                const message = await crud.addData(dataService.id, newData);
-                menu.resetDataService();
-                console.log(message);
-            } else if (dataService.id != -1) {
-                await crud.setData(dataService.id);
-                const data = crud.getData();
-                displayData(sections[dataService.id + 1], data);
-            }
-            else isRunning = false;
+            const id = await prompt.mainMenuPrompt();
+            console.log(id);
+            // const dataService = menu.getDataService();
+            // if (dataService.modifyData) {
+            //     // invoke modify data function
+            //     const updateData = await updateEmployeeRole(dataService.id);
+            //     await crud.updateEmployeeRole(updateData[1]);
+            //     menu.resetDataService();
+            //     console.log();
+            // } else if (dataService.addNewData) {
+            //     // invoke add new data funtion
+            //     const newData = await getNewData(dataService.id);
+            //     const message = await crud.addData(dataService.id, newData);
+            //     menu.resetDataService();
+            //     console.log(message);
+            // } else if (dataService.id != -1) {
+            //     await crud.setData(dataService.id);
+            //     const data = crud.getData();
+            //     displayData(sections[dataService.id + 1], data);
+            // }
+            // else isRunning = false;
         }
     } catch (error) {
         console.log(`${colors.red("ERROR occurs")}\n`, error);
