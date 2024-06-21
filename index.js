@@ -40,7 +40,7 @@ const newDepartmentPrompt = async () => {
         }
     ]);
     // console.log(res.departmentName);
-    return [`'${res.departmentName}'`];
+    return [res.departmentName];
 }
 
 const newRolePrompt = async () => {
@@ -72,7 +72,7 @@ const newRolePrompt = async () => {
         }
     ]);
 
-    return [`'${res.roleTitle}'`, parseFloat(res.roleSalary), (departmentList.indexOf(res.roleDepartment) + 1)];
+    return [res.roleTitle, parseFloat(res.roleSalary), (departmentList.indexOf(res.roleDepartment) + 1)];
 }
 
 const newEmployeePrompt = async () => {
@@ -114,7 +114,7 @@ const newEmployeePrompt = async () => {
     ]);
     const managerID = res.managerName !== "None" ? managerList.indexOf(res.managerName) + 1 : null;
     console.log([`'${res.firstName}'`, `'${res.lastName}'`, roleList.indexOf(res.roleTitle) + 1, managerID]);
-    return [`'${res.firstName}'`, `'${res.lastName}'`, roleList.indexOf(res.roleTitle) + 1, managerID];
+    return [res.firstName, res.lastName, roleList.indexOf(res.roleTitle) + 1, managerID];
 }
 
 const driver = async () => {
@@ -129,7 +129,7 @@ const driver = async () => {
             } else if (dataService.addNewData) {
                 // invoke add new data funtion
                 const newData = await getNewData(dataService.id);
-                const message = await crud.addData(dataService.id, `${newData}`);
+                const message = await crud.addData(dataService.id, newData);
                 menu.resetDataService();
                 console.log(message);
             } else if (dataService.id != -1) {
