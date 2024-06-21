@@ -62,6 +62,15 @@ class Crud {
 
         return list;
     }
+
+    async updateEmployeeRole (values){
+        try{
+            const res = await this.pool.query(`UPDATE employees SET role_id = $1 WHERE id = $2`, values);
+            console.log(res);
+        }catch (error) {
+            console.log(`Updating employee role occurs ERROR\n`, error);
+        }
+    }
 }
 
 module.exports = Crud;

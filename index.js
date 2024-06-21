@@ -117,6 +117,28 @@ const newEmployeePrompt = async () => {
     return [res.firstName, res.lastName, roleList.indexOf(res.roleTitle) + 1, managerID];
 }
 
+const updateEmployeeRole = async (id) => {
+    const employeeList = await crud.getEmployeeList();
+    employeeList.shift();
+    const roleList = await crud.getRoleList();
+    const res = await inquirer.prompt([
+        {
+            type: "list",
+            name: "employeeName",
+            choices: employeeList,
+            message: "Select an employee that you want to update:"
+        },
+        {
+            type: "list",
+            name: "newRole",
+            choices: roleList,
+            message: "Select a new role for this employee:"
+        }
+    ]);
+
+    return [[res.employeeName, res.newRole], [roleList.indexOf(res.newRole) + 1, employeeList.indexOf(res.employeeName) + 1]];
+}
+
 const driver = async () => {
     try {
         let isRunning = true;
@@ -126,6 +148,10 @@ const driver = async () => {
             const dataService = menu.getDataService();
             if (dataService.modifyData) {
                 // invoke modify data function
+                const updateData = await updateEmployeeRole(dataService.id);
+                await crud.updateEmployeeRole(updateData[1]);
+                menu.resetDataService();
+                console.log();
             } else if (dataService.addNewData) {
                 // invoke add new data funtion
                 const newData = await getNewData(dataService.id);
