@@ -8,7 +8,11 @@ class Menu {
             "Exit"];
         this.SECTIONS = [
             `,-----------------------------------------------.\n|                ${colors.yellow("Employee Manager")}               |\n\`-----------------------------------------------'`,
-            `\n,-----------------------------------------------.\n|              ${colors.yellow("Department Data Base")}             |\n\`-----------------------------------------------'`
+            `\n,-----------------------------------------------.\n|              ${colors.yellow("Department Data Base")}             |\n\`-----------------------------------------------'`,
+            `\n,-----------------------------------------------.\n|              ${colors.yellow("Roles Data Base")}                  |\n\`-----------------------------------------------'`,
+            `\n,-----------------------------------------------.\n|              ${colors.yellow("Employees Data Base")}                  |\n\`-----------------------------------------------'`,
+            `\n,-----------------------------------------------.\n|              ${colors.yellow("Add New Department")}               |\n\`-----------------------------------------------'`,
+            `\n,-----------------------------------------------.\n|                  ${colors.yellow("Add New Role")}                 |\n\`-----------------------------------------------'`
         ]
         this.dataService = {
             id: 0,
@@ -39,6 +43,12 @@ class Menu {
             this.dataService.id = 0;
         else
             this.dataService.id = -1;
+    }
+
+    resetDataService() {
+        this.dataService.id = 0;
+        this.dataService.addNewData = false;
+        this.dataService.modifyData = false;
     }
 
     getDataService() {
