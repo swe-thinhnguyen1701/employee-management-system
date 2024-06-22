@@ -40,6 +40,9 @@ const getOption = async () => {
   return res.option;
 };
 
+/**
+ * Prompts the user to input the name of a new department and adds it to the database.
+ */
 const addDepartment = async () => {
   const res = await inquirer.prompt([
     {
@@ -58,6 +61,9 @@ const addDepartment = async () => {
   console.log(rows[0]);
 };
 
+/**
+ * Prompts the user to input details for a new employee and adds them to the database.
+ */
 const addEmployee = async () => {
   const employeeList = await getEmployeeList();
   const roleList = await getRoleList();
@@ -102,6 +108,9 @@ const addEmployee = async () => {
   console.log(rows[0]);
 };
 
+/**
+ * Prompts the user to input details for a new role and adds it to the database.
+ */
 const addRole = async () => {
   const departmentList = await getDepartmentList();
   const res = await inquirer.prompt([
@@ -137,6 +146,9 @@ const addRole = async () => {
   console.log(rows[0]);
 };
 
+/**
+ * Prompts the user to select an employee and a new role, then updates the employee's role in the database.
+ */
 const updateEmployeeRole = async () => {
   const employeeList = await getEmployeeList();
   employeeList.shift(); //  remove None option
@@ -165,6 +177,9 @@ const updateEmployeeRole = async () => {
   console.log(rows[0]);
 };
 
+/**
+ * Fetches and displays the department table from the database.
+ */
 const viewDepartmentTable = async () => {
   console.log(
     `\n\n${"=".repeat(20)} ${colors.green("DEPARTMENT TABLE")} ${"=".repeat(
@@ -176,6 +191,9 @@ const viewDepartmentTable = async () => {
   console.log("\n\n");
 };
 
+/**
+ * Fetches and displays the employee table from the database.
+ */
 const viewEmployeeTable = async () => {
   console.log(
     `\n\n${"=".repeat(20)} ${colors.green("EMPLOYEE TABLE")} ${"=".repeat(20)}`
@@ -187,6 +205,9 @@ const viewEmployeeTable = async () => {
   console.log("\n\n");
 };
 
+/**
+ * Fetches and displays the role table from the database.
+ */
 const viewRoleTable = async () => {
   console.log(
     `\n\n${"=".repeat(20)} ${colors.green("ROLE TABLE")} ${"=".repeat(20)}`
@@ -198,6 +219,11 @@ const viewRoleTable = async () => {
   console.log("\n\n");
 };
 
+/**
+ * Fetches the list of departments from the database.
+ *
+ * @returns {Promise<string[]>} - A promise that resolves to an array of department names.
+ */
 const getDepartmentList = async () => {
   const departmentList = [];
   const { rows } = await pool.query("SELECT d.name FROM department d");
@@ -208,6 +234,11 @@ const getDepartmentList = async () => {
   return departmentList;
 };
 
+/**
+ * Fetches the list of roles from the database.
+ *
+ * @returns {Promise<string[]>} - A promise that resolves to an array of role titles.
+ */
 const getRoleList = async () => {
   const roleList = [];
   const { rows } = await pool.query("SELECT r.title FROM roles r");
@@ -218,6 +249,12 @@ const getRoleList = async () => {
   return roleList;
 };
 
+/**
+ * Fetches the list of employees from the database.
+ *
+ * @returns {Promise<string[]>} - A promise that resolves to an array of employee names,
+ *                                starting with "None".
+ */
 const getEmployeeList = async () => {
   const employeeList = ["None"];
   const { rows } = await pool.query(
@@ -230,6 +267,13 @@ const getEmployeeList = async () => {
   return employeeList;
 };
 
+/**
+ * Validates the length of an input string.
+ *
+ * @param {string} input - The input string to be validated.
+ * @returns {Promise<boolean>} - A promise that resolves to `true` if the input length is 30 characters or less,
+ *                               and `false` if the input length is more than 30 characters.
+ */
 const validateInputLength = async (input) => {
   if (input.length > 30) {
     console.log(`\n${colors.red(input)} has more than 30 characters`);
@@ -238,6 +282,13 @@ const validateInputLength = async (input) => {
   return true;
 };
 
+/**
+ * Validates if the input is a number.
+ *
+ * @param {string} input - The input string to be validated.
+ * @returns {Promise<boolean>} - A promise that resolves to `true` if the input is a valid number,
+ *                               and `false` if the input is not a valid number.
+ */
 const validateInputNumber = async (input) => {
   if (isNaN(input)) {
     console.log(`\n${colors.red(input)} is not a number`);
@@ -257,6 +308,7 @@ const driver = async () => {
     } else if (option === "Add Role") {
       await addRole();
     } else if (option === "Delete Department") {
+      await deleteDepartment();
     } else if (option === "Delete Employee") {
     } else if (option === "Delete Role") {
     } else if (option === "Update Employee Manager") {
