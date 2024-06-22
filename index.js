@@ -2,12 +2,7 @@
 const inquirer = require("inquirer");
 const colors = require("colors");
 const { Pool } = require("pg");
-const pool = new Pool({
-  user: "postgres",
-  password: "P@$$word170195",
-  host: "localhost",
-  database: "employee_db",
-});
+let pool = null;
 
 const options = [
   "Add Deperatment",
@@ -528,13 +523,44 @@ const validateInputNumber = async (input) => {
   return true;
 };
 
+const setUpPsql = async () => {
+  const res = await inquirer.prompt([
+    {
+      type: "input",
+      name: "psqlUser",
+      message: "Enter your PostgreSQL username:",
+    },
+    {
+      type: "password",
+      name: "psqlPassword",
+      message: "Enter your PostgreSQL password:",
+    },
+  ]);
+
+  pool = new Pool({
+    user: `${res.psqlUser}`,
+    password: `${res.psqlPassword}`,
+    host: "localhost",
+    database: "employee_db",
+  });
+
+  try {
+    await pool.connect();
+    console.log(`${colors.green("Connected to the database successfully.\n\n")}`);
+    return true;
+  } catch (error) {
+    console.log(`${colors.red("Failed to connect to the database.")}`);
+    return false;
+  }
+};
+
 /**
  * The main driver function that runs the application loop.
  * It prompts the user with various options and calls the appropriate functions based on the selected option.
  * The loop continues running until the user chooses to exit the application.
  */
 const driver = async () => {
-  let isRunning = true;
+  let isRunning = await setUpPsql();
   while (isRunning) {
     const option = await getOption();
     if (option === "Add Deperatment") {
@@ -567,7 +593,7 @@ const driver = async () => {
       await viewTotalBuget();
     } else isRunning = false;
   }
-  console.log(`${colors.green("Thank you for using my application.")}`);
+  console.log(`${colors.green("\nThank you for using my application.")}`);
   process.exit();
 };
 
