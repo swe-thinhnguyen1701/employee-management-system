@@ -1,181 +1,249 @@
 /** npm packages **/
 const inquirer = require("inquirer");
 const colors = require("colors");
-const Crud = require("./libs/Crud");
-const Menu = require("./libs/Menu");
+const { Pool } = require("pg");
+const pool = new Pool({
+  user: "postgres",
+  password: "P@$$word170195",
+  host: "localhost",
+  database: "employee_db",
+});
 
-const crud = new Crud("postgres", "P@$$word170195");
-const menu = new Menu();
-const menuList = menu.getMenuList();
-const sections = menu.getSectionList();
+const options = [
+  "Add Deperatment",
+  "Add Employee",
+  "Add Role",
+  "Delete Department",
+  "Delete Employee",
+  "Delete Role",
+  "Update Employee Manager",
+  "Update Employee Role",
+  "View All Departments",
+  "View All Employees",
+  "View All Roles",
+  "View Employee by Department",
+  "View Employee by Manager",
+  "View The Total Utilized Budge of A Department",
+  "Exit",
+];
 
-const prompt = async () => {
-    console.log(sections[0]);
-    const res = await inquirer.prompt([
-        {
-            type: "list",
-            name: "option",
-            choices: menuList,
-            message: "What would you like to do?"
-        }
-    ]);
-    menu.setDataService(res.option);
-}
+const getOption = async () => {
+  const res = await inquirer.prompt([
+    {
+      type: "list",
+      name: "option",
+      choices: options,
+      message: "What would you like to do?",
+    },
+  ]);
 
-const getNewData = async (id) => {
-    let newData = [];
-    if (id == 0) newData = await newDepartmentPrompt();
-    else if (id == 1) newData = await newRolePrompt();
-    else newData = await newEmployeePrompt();
-    return newData;
-}
+  return res.option;
+};
 
-const newDepartmentPrompt = async () => {
-    console.log(sections[4]);
-    const res = await inquirer.prompt([
-        {
-            type: "input",
-            name: "departmentName",
-            message: "What is the name of a new department?"
-        }
-    ]);
-    // console.log(res.departmentName);
-    return [res.departmentName];
-}
+const addDepartment = async () => {
+  const res = await inquirer.prompt([
+    {
+      type: "input",
+      name: "departmentName",
+      message: "What is the name of a new department?",
+      validate: validateInputLength(input),
+    },
+  ]);
 
-const newRolePrompt = async () => {
-    const departmentList = await crud.getDepartmentList();
-    console.log(sections[5]);
-    const res = await inquirer.prompt([
-        {
-            type: "input",
-            name: "roleTitle",
-            message: "Enter role title: "
-        },
-        {
-            type: "input",
-            name: "roleSalary",
-            message: "Enter salary amount: $",
-            validate: async (input) => {
-                if (isNaN(parseFloat(input))) {
-                    console.log(`\n${colors.red(input)} is INVALID. Enter digit only`);
-                    return false;
-                }
-                return true;
-            }
-        },
-        {
-            type: "list",
-            name: "roleDepartment",
-            choices: departmentList,
-            message: "Select department: "
-        }
-    ]);
+  const values = [res.departmentName];
+  const { rows } = await pool.query(
+    "INSERT INTO departments (name) VALUES ($1) RETURNING *",
+    values
+  );
+  console.log(rows[0]);
+};
 
-    return [res.roleTitle, parseFloat(res.roleSalary), (departmentList.indexOf(res.roleDepartment) + 1)];
-}
+const addEmployee = async () => {
+  const employeeList = await getEmployeeList();
+  const roleList = await getRoleList();
+  const res = await inquirer.prompt([
+    {
+      type: "input",
+      name: "employeeFirstName",
+      message: "What is the first name of a new employee?",
+      validate: validateInputLength(input),
+    },
+    {
+      type: "input",
+      name: "employeeLastName",
+      message: "What is the last name of a new employee?",
+      validate: validateInputLength(input),
+    },
+    {
+      type: "list",
+      name: "employeeRole",
+      choices: roleList,
+      message: "Which is the role of a new employee?",
+    },
+    {
+      type: "list",
+      name: "employeeManagerName",
+      choices: employeeList,
+      message: "Who is manager of a new employee",
+    },
+  ]);
+  const managerId =
+    res.employeeManagerName !== "None" ? res.employeeManagerName : null;
+  const values = [
+    res.employeeFirstName,
+    res.employeeLastName,
+    roleList.indexOf(res.employeeRole) + 1,
+    managerId,
+  ];
+  const { rows } = await pool.query(
+    "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4) RETURNING *",
+    values
+  );
+  console.log(rows[0]);
+};
 
-const newEmployeePrompt = async () => {
-    const roleList = await crud.getRoleList();
-    const managerList = await crud.getEmployeeList();
-    console.log(sections[6]);
-    const nameValidation = async (name) => {
-        if (name.length > 30) {
-            console.log(`${colors.red(name)} has more than 30 characters`);
-            return false;
-        }
-        return true;
-    }
-    const res = await inquirer.prompt([
-        {
-            type: "input",
-            name: "firstName",
-            message: "What is his/her first name?",
-            validate: nameValidation
-        },
-        {
-            type: "input",
-            name: "lastName",
-            message: "What is his/her last name?",
-            validate: nameValidation
-        },
-        {
-            type: "list",
-            name: "roleTitle",
-            choices: roleList,
-            message: "Select role title:"
-        },
-        {
-            type: "list",
-            name: "managerName",
-            choices: managerList,
-            message: "Select manager name: "
-        }
-    ]);
-    const managerID = res.managerName !== "None" ? managerList.indexOf(res.managerName) + 1 : null;
-    console.log([`'${res.firstName}'`, `'${res.lastName}'`, roleList.indexOf(res.roleTitle) + 1, managerID]);
-    return [res.firstName, res.lastName, roleList.indexOf(res.roleTitle) + 1, managerID];
-}
+const addRole = async () => {
+  const departmentList = await getDepartmentList();
+  const res = await inquirer.prompt([
+    {
+      type: "input",
+      name: "roleTitle",
+      message: "What is the title of a new role?",
+      validate: validateInputLength(input),
+    },
+    {
+      type: "input",
+      name: "roleSalary",
+      message: "What is the salary of a new role?",
+      validate: validateInputNumber(input),
+    },
+    {
+      type: "list",
+      name: "roleDepartment",
+      choices: departmentList,
+      message: "Which department does the role belong to?",
+    },
+  ]);
 
-const updateEmployeeRole = async (id) => {
-    const employeeList = await crud.getEmployeeList();
-    employeeList.shift();
-    const roleList = await crud.getRoleList();
-    const res = await inquirer.prompt([
-        {
-            type: "list",
-            name: "employeeName",
-            choices: employeeList,
-            message: "Select an employee that you want to update:"
-        },
-        {
-            type: "list",
-            name: "newRole",
-            choices: roleList,
-            message: "Select a new role for this employee:"
-        }
-    ]);
+  const values = [
+    res.roleTitle,
+    parseFloat(res.roleSalary),
+    departmentList.indexOf(res.roleDepartment) + 1,
+  ];
+  const { rows } = await pool.query(
+    "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3) RETURNING *",
+    values
+  );
+  console.log(rows[0]);
+};
 
-    return [[res.employeeName, res.newRole], [roleList.indexOf(res.newRole) + 1, employeeList.indexOf(res.employeeName) + 1]];
-}
+const viewDepartmentTable = async () => {
+  console.log(
+    `\n\n${"=".repeat(20)} ${colors.green("DEPARTMENT TABLE")} ${"=".repeat(
+      20
+    )}`
+  );
+  const { rows } = await pool.query("SELECT d.name FROM departments d");
+  console.table(rows);
+  console.log("\n\n");
+};
+
+const viewEmployeeTable = async () => {
+  console.log(
+    `\n\n${"=".repeat(20)} ${colors.green("EMPLOYEE TABLE")} ${"=".repeat(20)}`
+  );
+  const { rows } = await pool.query(
+    "SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS department, COALESCE(m.first_name || ' ' || m.last_name, 'NULL') AS manager FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department = d.id LEFT JOIN employees m ON e.manager_id = m.id"
+  );
+  console.table(rows);
+  console.log("\n\n");
+};
+
+const viewRoleTable = async () => {
+  console.log(
+    `\n\n${"=".repeat(20)} ${colors.green("ROLE TABLE")} ${"=".repeat(20)}`
+  );
+  const { rows } = await pool.query(
+    "SELECT r.id, r.title, r.salary, d.name AS department FROM roles r JOIN departments d ON r.department = d.id"
+  );
+  console.table(rows);
+  console.log("\n\n");
+};
+
+const getDepartmentList = async () => {
+  const departmentList = [];
+  const { rows } = await pool.query("SELECT d.name FROM department d");
+  for (let department of rows) {
+    departmentList.push(department.name);
+  }
+
+  return departmentList;
+};
+
+const getRoleList = async () => {
+  const roleList = [];
+  const { rows } = await pool.query("SELECT r.title FROM roles r");
+  for (let role of rows) {
+    roleList.push(role.title);
+  }
+
+  return roleList;
+};
+
+const getEmployeeList = async () => {
+  const employeeList = ["None"];
+  const { rows } = await pool.query(
+    "SELECT CONCAT(e.first_name, ' ', e.last_name) AS name FROM employees e"
+  );
+  for (let employee of rows) {
+    employeeList.push(`${employee.name}`);
+  }
+
+  return employeeList;
+};
+
+const validateInputLength = async (input) => {
+  if (input.length > 30) {
+    console.log(`\n${colors.red(input)} has more than 30 characters`);
+    return false;
+  }
+  return true;
+};
+
+const validateInputNumber = async (input) => {
+  if (isNaN(input)) {
+    console.log(`\n${colors.red(input)} is not a number`);
+    return false;
+  }
+  return true;
+};
 
 const driver = async () => {
-    try {
-        let isRunning = true;
-        // console.log(`${newData} line 60`);
-        while (isRunning) {
-            await prompt();
-            const dataService = menu.getDataService();
-            if (dataService.modifyData) {
-                // invoke modify data function
-                const updateData = await updateEmployeeRole(dataService.id);
-                await crud.updateEmployeeRole(updateData[1]);
-                menu.resetDataService();
-                console.log();
-            } else if (dataService.addNewData) {
-                // invoke add new data funtion
-                const newData = await getNewData(dataService.id);
-                const message = await crud.addData(dataService.id, newData);
-                menu.resetDataService();
-                console.log(message);
-            } else if (dataService.id != -1) {
-                await crud.setData(dataService.id);
-                const data = crud.getData();
-                displayData(sections[dataService.id + 1], data);
-            }
-            else isRunning = false;
-        }
-    } catch (error) {
-        console.log(`${colors.red("ERROR occurs")}\n`, error);
-    }
-    console.log(`${colors.green("\nThank you for using our application")}`);
-    process.exit(0);
-}
-
-const displayData = (section, data) => {
-    console.log(section);
-    console.table(data);
-    console.log("\n\n");
-}
+  let isRunning = true;
+  while (isRunning) {
+    const option = await getOption();
+    if (option === "Add Deperatment") {
+      await addDepartment();
+    } else if (option === "Add Employee") {
+      await addEmployee();
+    } else if (option === "Add Role") {
+      await addRole();
+    } else if (option === "Delete Department") {
+    } else if (option === "Delete Employee") {
+    } else if (option === "Delete Role") {
+    } else if (option === "Update Employee Manager") {
+    } else if (option === "Update Employee Role") {
+    } else if (option === "View All Departments") {
+      await viewDepartmentTable();
+    } else if (option === "View All Employees") {
+      await viewEmployeeTable();
+    } else if (option === "View All Roles") {
+      await viewRoleTable();
+    } else if (option === "View Employee by Department") {
+    } else if (option === "View Employee by Manager") {
+    } else if (option === "View The Total Utilized Budge of A Department") {
+    } else isRunning = false;
+  }
+};
 
 driver();
