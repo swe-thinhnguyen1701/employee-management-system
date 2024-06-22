@@ -261,7 +261,9 @@ const updateEmployeeManager = async () => {
     },
   ]);
 
-  const employeeId = employeeList.find(employee => employee.name === res.employeeName).id;
+  const employeeId = employeeList.find(
+    (employee) => employee.name === res.employeeName
+  ).id;
   const managerId = employeeList.find(
     (employee) => employee.name === res.employeeManagerName
   ).id;
@@ -271,7 +273,7 @@ const updateEmployeeManager = async () => {
     values
   );
   console.log(rows[0]);
-}
+};
 
 /**
  * Prompts the user to select an employee and a new role, then updates the employee's role in the database.
@@ -295,8 +297,11 @@ const updateEmployeeRole = async () => {
     },
   ]);
 
-  const roleId = roleList.indexOf(res.employeeNewRole) + 1;
-  const values = [roleId, employeeList.indexOf(res.employeeName) + 1];
+  const roleId = roleList.find((role) => role.name === res.employeeNewRole).id;
+  const employeeId = employeeList.find(
+    (employee) => employee.name === res.employeeName
+  ).id;
+  const values = [roleId, employeeId];
   const { rows } = await pool.query(
     "UPDATE employees SET role_id = $1 WHERE id = $2 RETURNING *",
     values
@@ -369,6 +374,38 @@ const viewEmployeeByDepartment = async () => {
     console.log(
       `\n\n${"=".repeat(20)} ${colors.green(
         `EMPLOYEE TABLE of ${res.departmentName.toUpperCase()} DEPARTMENT`
+      )} ${"=".repeat(20)}`
+    );
+    console.table(rows);
+  } else {
+    console.log(`${colors.yellow("NO DATA")}`);
+  }
+  console.log("\n\n");
+};
+
+const viewEmployeeByManager = async () => {
+  const employeeList = await getEmployeeList();
+  const res = await inquirer.prompt([
+    {
+      type: "list",
+      name: "managerName",
+      choices: employeeList,
+      message: "Which manager do you want to view?",
+    },
+  ]);
+
+  const managerId = employeeList.find(
+    (employee) => employee.name === res.managerName
+  ).id;
+  const values = [managerId];
+  const { rows } = await pool.query(
+    "SELECT CONCAT(e.first_name, ' ', e.last_name) AS name, r.title FROM employees e JOIN roles r ON e.role_id = r.id WHERE e.manager_id = $1",
+    values
+  );
+  if (rows.length !== 0) {
+    console.log(
+      `\n\n${"=".repeat(20)} ${colors.green(
+        `EMPLOYEE TABLE of ${res.managerName.toUpperCase()} MANAGER`
       )} ${"=".repeat(20)}`
     );
     console.table(rows);
@@ -478,6 +515,7 @@ const driver = async () => {
     } else if (option === "View Employee by Department") {
       await viewEmployeeByDepartment();
     } else if (option === "View Employee by Manager") {
+      await viewEmployeeByManager();
     } else if (option === "View The Total Utilized Budge of A Department") {
     } else isRunning = false;
   }
