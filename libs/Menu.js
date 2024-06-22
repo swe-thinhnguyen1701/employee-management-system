@@ -6,16 +6,16 @@ class Menu {
       "Add Deperatment",
       "Add Employee",
       "Add Role",
-      "Delte Department",
-      "Delete Role",
+      "Delete Department",
       "Delete Employee",
+      "Delete Role",
       "Update Employee Manager",
       "Update Employee Role",
       "View All Departments",
       "View All Employees",
+      "View All Roles",
       "View Employee by Department",
       "View Employee by Manager",
-      "View All Roles",
       "View The Total Utilized Budge of A Department",
       "Exit",
     ];
@@ -45,36 +45,38 @@ class Menu {
     this.dataService = {
       id: 0,
       addNewData: false,
-      modifyData: false,
+      deleteData: false,
+      updateData: false,
     };
-  }
-
-  getMenuList() {
-    return this.MENU;
-  }
-
-  getSectionList() {
-    return this.SECTIONS;
   }
 
   setDataService(option) {
     const idx = this.MENU.indexOf(option);
-    if (idx == 2) this.dataService.modifyData = true;
-    if (idx == 1 || idx == 6 || idx == 4) this.dataService.addNewData = true;
-    if (idx < 3) this.dataService.id = 2;
-    else if (idx < 5) this.dataService.id = 1;
-    else if (idx < 7) this.dataService.id = 0;
-    else this.dataService.id = -1;
+    if (idx < 3) {
+      this.dataService.addNewData = true;
+      this.dataService.id = idx;
+    } else if (idx < 6) {
+      this.dataService.deleteData = true;
+      this.dataService.id = idx - 3;
+    } else if (idx < 8) {
+      this.dataService.updateData = true;
+      this.dataService.id = idx - 6;
+    } else if (idx < 14) {
+      this.dataService.id = idx - 8;
+    } else {
+      this.dataService.id = -1;
+    }
+  }
+
+  getDataService() {
+    return this.dataService;
   }
 
   resetDataService() {
     this.dataService.id = 0;
     this.dataService.addNewData = false;
-    this.dataService.modifyData = false;
-  }
-
-  getDataService() {
-    return this.dataService;
+    this.dataService.deleteData = false;
+    this.dataService.updateData = false;
   }
 }
 
