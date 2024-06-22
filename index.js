@@ -46,7 +46,7 @@ const addDepartment = async () => {
       type: "input",
       name: "departmentName",
       message: "What is the name of a new department?",
-      validate: validateInputLength(input),
+      validate: validateInputLength,
     },
   ]);
 
@@ -66,13 +66,13 @@ const addEmployee = async () => {
       type: "input",
       name: "employeeFirstName",
       message: "What is the first name of a new employee?",
-      validate: validateInputLength(input),
+      validate: validateInputLength,
     },
     {
       type: "input",
       name: "employeeLastName",
       message: "What is the last name of a new employee?",
-      validate: validateInputLength(input),
+      validate: validateInputLength,
     },
     {
       type: "list",
@@ -109,13 +109,13 @@ const addRole = async () => {
       type: "input",
       name: "roleTitle",
       message: "What is the title of a new role?",
-      validate: validateInputLength(input),
+      validate: validateInputLength,
     },
     {
       type: "input",
       name: "roleSalary",
       message: "What is the salary of a new role?",
-      validate: validateInputNumber(input),
+      validate: validateInputNumber,
     },
     {
       type: "list",
@@ -132,6 +132,34 @@ const addRole = async () => {
   ];
   const { rows } = await pool.query(
     "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3) RETURNING *",
+    values
+  );
+  console.log(rows[0]);
+};
+
+const updateEmployeeRole = async () => {
+  const employeeList = await getEmployeeList();
+  employeeList.shift(); //  remove None option
+  const roleList = await getRoleList();
+  const res = await inquirer.prompt([
+    {
+      type: "list",
+      name: "employeeName",
+      choices: employeeList,
+      message: "Which employee's role do you want to update?",
+    },
+    {
+      type: "list",
+      name: "employeeNewRole",
+      choices: roleList,
+      message: "Which is the new role of the employee?",
+    },
+  ]);
+
+  const roleId = roleList.indexOf(res.employeeNewRole) + 1;
+  const values = [roleId, employeeList.indexOf(res.employeeName) + 1];
+  const { rows } = await pool.query(
+    "UPDATE employees SET role_id = $1 WHERE id = $2 RETURNING *",
     values
   );
   console.log(rows[0]);
@@ -233,6 +261,7 @@ const driver = async () => {
     } else if (option === "Delete Role") {
     } else if (option === "Update Employee Manager") {
     } else if (option === "Update Employee Role") {
+      await updateEmployeeRole();
     } else if (option === "View All Departments") {
       await viewDepartmentTable();
     } else if (option === "View All Employees") {
