@@ -66,16 +66,16 @@ const addDepartment = async () => {
  */
 const addEmployee = async () => {
   const employeeList = await getEmployeeList();
-  console.log(`employee list: ${JSON.stringify(employeeList)}`);
-  const formatEmployeeList = [];
-  for (let employee of employeeList) {
-    formatEmployeeList.push(`${employee.id}\t${employee.name}`);
-  }
+  // console.log(`employee list: ${JSON.stringify(employeeList)}`);
+  // const formatEmployeeList = [];
+  // for (let employee of employeeList) {
+  //   formatEmployeeList.push(`${employee.id}\t${employee.name}`);
+  // }
   const roleList = await getRoleList();
-  const formatRoleList = [];
-  for (let role of roleList) {
-    formatRoleList.push(`${role.id}\t${role.title}`);
-  }
+  // const formatRoleList = [];
+  // for (let role of roleList) {
+  //   formatRoleList.push(`${role.id}\t${role.title}`);
+  // }
   const res = await inquirer.prompt([
     {
       type: "input",
@@ -92,23 +92,24 @@ const addEmployee = async () => {
     {
       type: "list",
       name: "employeeRole",
-      choices: formatRoleList,
+      choices: roleList,
       message: `Which is the role of a new employee?\n  ID\tRole Title\n  --\t${"-".repeat(
         10
       )}`,
     },
     {
       type: "list",
-      name: "employeeManagerData",
-      choices: formatEmployeeList,
+      name: "employeeManagerName",
+      choices: employeeList,
       message: `Who is manager of a new employee\n  ID\tManager Name\n  --\t${"-".repeat(
         12
       )}`,
     },
   ]);
-  const managerId =
-    employeeList[formatEmployeeList.indexOf(res.employeeManagerData)].id;
-  const roleId = roleList[formatRoleList.indexOf(res.employeeRole)].id;
+  const managerId = employeeList.find(
+    (employee) => employee.name === res.employeeManagerName
+  ).id;
+  const roleId = roleList.find((role) => role.title === res.employeeRole).id;
   const values = [
     res.employeeFirstName,
     res.employeeLastName,
@@ -129,10 +130,10 @@ const addEmployee = async () => {
 const addRole = async () => {
   const departmentList = await getDepartmentList();
   // console.log(`department list: ${JSON.stringify(departmentList)}`);
-  const formatDepartmentList = ["ID\tDepartment Name", `--\t${"-".repeat(15)}`];
-  for (let department of departmentList) {
-    formatDepartmentList.push(`${department.id}\t${department.name}`);
-  }
+  // const formatDepartmentList = ["ID\tDepartment Name", `--\t${"-".repeat(15)}`];
+  // for (let department of departmentList) {
+  //   formatDepartmentList.push(`${department.id}\t${department.name}`);
+  // }
   const res = await inquirer.prompt([
     {
       type: "input",
@@ -149,15 +150,16 @@ const addRole = async () => {
     {
       type: "list",
       name: "roleDepartment",
-      choices: formatDepartmentList,
+      choices: departmentList,
       message: "Which department does the role belong to?",
     },
   ]);
 
   // console.log(`IDX: ${formatDepartmentList.indexOf(res.roleDepartment) - 2}`);
   // console.log(JSON.stringify(departmentList[formatDepartmentList.indexOf(res.roleDepartment) - 2]));
-  const departmentId =
-    departmentList[formatDepartmentList.indexOf(res.roleDepartment) - 2].id;
+  const departmentId = departmentList.find(
+    (department) => department.name === res.roleDepartment
+  ).id;
   const values = [res.roleTitle, parseFloat(res.roleSalary), departmentId];
   const { rows } = await pool.query(
     "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3) RETURNING *",
