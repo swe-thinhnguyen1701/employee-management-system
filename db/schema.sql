@@ -12,8 +12,8 @@ create table roles (
     id serial primary key,
     title varchar(30) not null,
     salary decimal not null,
-    department integer,
-    foreign key (department) references departments(id)
+    department_id integer,
+    foreign key (department_id) references departments(id)
 );
 
 create table employees (

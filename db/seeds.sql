@@ -4,7 +4,7 @@ values  ('Engineering'),
         ('Legal'),
         ('Sales');
 
-insert into roles (title, salary, department)
+insert into roles (title, salary, department_id)
 values  ('Sale Lead', 100000, 4),
         ('Salesperson', 80000, 4),
         ('Lead Engineer', 150000, 1),
