@@ -66,16 +66,7 @@ const addDepartment = async () => {
  */
 const addEmployee = async () => {
   const employeeList = await getEmployeeList();
-  // console.log(`employee list: ${JSON.stringify(employeeList)}`);
-  // const formatEmployeeList = [];
-  // for (let employee of employeeList) {
-  //   formatEmployeeList.push(`${employee.id}\t${employee.name}`);
-  // }
   const roleList = await getRoleList();
-  // const formatRoleList = [];
-  // for (let role of roleList) {
-  //   formatRoleList.push(`${role.id}\t${role.title}`);
-  // }
   const res = await inquirer.prompt([
     {
       type: "input",
@@ -93,23 +84,19 @@ const addEmployee = async () => {
       type: "list",
       name: "employeeRole",
       choices: roleList,
-      message: `Which is the role of a new employee?\n  ID\tRole Title\n  --\t${"-".repeat(
-        10
-      )}`,
+      message: `Which is the role of a new employee?`,
     },
     {
       type: "list",
       name: "employeeManagerName",
       choices: employeeList,
-      message: `Who is manager of a new employee\n  ID\tManager Name\n  --\t${"-".repeat(
-        12
-      )}`,
+      message: `Who is manager of a new employee`,
     },
   ]);
   const managerId = employeeList.find(
     (employee) => employee.name === res.employeeManagerName
   ).id;
-  const roleId = roleList.find((role) => role.title === res.employeeRole).id;
+  const roleId = roleList.find((role) => role.name === res.employeeRole).id;
   const values = [
     res.employeeFirstName,
     res.employeeLastName,
@@ -129,11 +116,6 @@ const addEmployee = async () => {
  */
 const addRole = async () => {
   const departmentList = await getDepartmentList();
-  // console.log(`department list: ${JSON.stringify(departmentList)}`);
-  // const formatDepartmentList = ["ID\tDepartment Name", `--\t${"-".repeat(15)}`];
-  // for (let department of departmentList) {
-  //   formatDepartmentList.push(`${department.id}\t${department.name}`);
-  // }
   const res = await inquirer.prompt([
     {
       type: "input",
@@ -155,8 +137,6 @@ const addRole = async () => {
     },
   ]);
 
-  // console.log(`IDX: ${formatDepartmentList.indexOf(res.roleDepartment) - 2}`);
-  // console.log(JSON.stringify(departmentList[formatDepartmentList.indexOf(res.roleDepartment) - 2]));
   const departmentId = departmentList.find(
     (department) => department.name === res.roleDepartment
   ).id;
@@ -187,10 +167,6 @@ const deleteDepartment = async () => {
       "SELECT r.title FROM roles r WHERE department_id = $1",
       values
     );
-    // const employees = await pool.query(
-    //   "SELECT CONCAT(e.first_name, ' ', e.last_name) AS name FROM employees e WHERE role_id IN (SELECT id FROM roles WHERE department_id = $1)",
-    //   values
-    // );
     console.log("ROLES list: ", roles.rows);
     if (roles.rows.length > 0) {
       console.log(
@@ -235,6 +211,67 @@ const deleteEmployee = async () => {
     console.log(`${colors.red("ERROR occurs while deleting!")}\n${error}`);
   }
 };
+
+const deleteRole = async () => {
+  const roleList = await getRoleList();
+  const res = await inquirer.prompt([
+    {
+      type: "list",
+      name: "roleName",
+      choices: roleList,
+      message: "Which role do you want to delete?",
+    },
+  ]);
+
+  const roleId = roleList.find((role) => role.name === res.roleName).id;
+  const values = [roleId];
+  try {
+    const employees = await pool.query(
+      "SELECT * FROM employees WHERE role_id = $1",
+      values
+    );
+    // console.log("EMPLOYEES list: ", employees.rows);
+    if (employees.rows.length > 0) {
+      console.log(
+        `\n${colors.red("Cannot delete a role that contains employees.")}\n`
+      );
+      return;
+    }
+    await pool.query("DELETE FROM roles WHERE id = $1", values);
+    console.log(`${colors.green(res.roleName)} is removed`);
+  } catch (error) {
+    console.log(`${colors.red("ERROR occurs while deleting!")}\n${error}`);
+  }
+};
+
+const updateEmployeeManager = async () => {
+  const employeeList = await getEmployeeList();
+  const res = await inquirer.prompt([
+    {
+      type: "list",
+      name: "employeeName",
+      choices: employeeList,
+      message: "Which employee do you want to update?",
+    },
+    {
+      type: "list",
+      name: "employeeManagerName",
+      choices: employeeList,
+      message: "Who is the new manager of the employee?",
+    },
+  ]);
+
+  const employeeId = employeeList.find(employee => employee.name === res.employeeName).id;
+  const managerId = employeeList.find(
+    (employee) => employee.name === res.employeeManagerName
+  ).id;
+  const values = [managerId, employeeId];
+  const { rows } = await pool.query(
+    "UPDATE employees SET manager_id = $1 WHERE id = $2 RETURNING *",
+    values
+  );
+  console.log(rows[0]);
+}
 
 /**
  * Prompts the user to select an employee and a new role, then updates the employee's role in the database.
@@ -309,6 +346,38 @@ const viewRoleTable = async () => {
   console.log("\n\n");
 };
 
+const viewEmployeeByDepartment = async () => {
+  const departmentList = await getDepartmentList();
+  const res = await inquirer.prompt([
+    {
+      type: "list",
+      name: "departmentName",
+      choices: departmentList,
+      message: "Which department do you want to view?",
+    },
+  ]);
+
+  const departmentId = departmentList.find(
+    (department) => department.name === res.departmentName
+  ).id;
+  const values = [departmentId];
+  const { rows } = await pool.query(
+    "SELECT CONCAT(e.first_name, ' ' ,e.last_name) AS name, r.title FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = $1",
+    values
+  );
+  if (rows.length !== 0) {
+    console.log(
+      `\n\n${"=".repeat(20)} ${colors.green(
+        `EMPLOYEE TABLE of ${res.departmentName.toUpperCase()} DEPARTMENT`
+      )} ${"=".repeat(20)}`
+    );
+    console.table(rows);
+  } else {
+    console.log(`${colors.yellow("NO DATA")}`);
+  }
+  console.log("\n\n");
+};
+
 /**
  * Fetches the list of departments from the database.
  *
@@ -325,7 +394,9 @@ const getDepartmentList = async () => {
  * @returns {Promise<string[]>} - A promise that resolves to an array of role titles.
  */
 const getRoleList = async () => {
-  const { rows } = await pool.query("SELECT r.id, r.title FROM roles r");
+  const { rows } = await pool.query(
+    "SELECT r.id, r.title as name FROM roles r"
+  );
 
   return rows;
 };
@@ -344,7 +415,7 @@ const getEmployeeList = async () => {
   for (let employee of rows) {
     employeeList.push(employee);
   }
-  console.log(JSON.stringify(rows));
+  // console.log(JSON.stringify(rows));
   return employeeList;
 };
 
@@ -393,7 +464,9 @@ const driver = async () => {
     } else if (option === "Delete Employee") {
       await deleteEmployee();
     } else if (option === "Delete Role") {
+      await deleteRole();
     } else if (option === "Update Employee Manager") {
+      await updateEmployeeManager();
     } else if (option === "Update Employee Role") {
       await updateEmployeeRole();
     } else if (option === "View All Departments") {
@@ -403,6 +476,7 @@ const driver = async () => {
     } else if (option === "View All Roles") {
       await viewRoleTable();
     } else if (option === "View Employee by Department") {
+      await viewEmployeeByDepartment();
     } else if (option === "View Employee by Manager") {
     } else if (option === "View The Total Utilized Budge of A Department") {
     } else isRunning = false;
