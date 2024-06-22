@@ -244,6 +244,16 @@ const deleteRole = async () => {
   }
 };
 
+/**
+ * Updates the manager of a selected employee.
+ *
+ * This function prompts the user to select an employee whose manager needs to be updated and then prompts to select a new manager for the employee.
+ * It updates the manager of the selected employee in the database and logs the updated employee information.
+ *
+ * @async
+ * @function updateEmployeeManager
+ * @returns {Promise<void>} - A promise that resolves when the employee manager update operation is complete.
+ */
 const updateEmployeeManager = async () => {
   const employeeList = await getEmployeeList();
   const res = await inquirer.prompt([
@@ -314,9 +324,7 @@ const updateEmployeeRole = async () => {
  */
 const viewDepartmentTable = async () => {
   console.log(
-    `\n\n${"=".repeat(20)} ${colors.green("DEPARTMENT TABLE")} ${"=".repeat(
-      20
-    )}`
+    `\n\n${"=".repeat(5)} ${colors.green("DEPARTMENT TABLE")} ${"=".repeat(5)}`
   );
   const { rows } = await pool.query("SELECT d.name FROM departments d");
   console.table(rows);
@@ -328,7 +336,7 @@ const viewDepartmentTable = async () => {
  */
 const viewEmployeeTable = async () => {
   console.log(
-    `\n\n${"=".repeat(20)} ${colors.green("EMPLOYEE TABLE")} ${"=".repeat(20)}`
+    `\n\n${"=".repeat(43)} ${colors.green("EMPLOYEE TABLE")} ${"=".repeat(43)}`
   );
   const { rows } = await pool.query(
     "SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS department, COALESCE(m.first_name || ' ' || m.last_name, 'NULL') AS manager FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id LEFT JOIN employees m ON e.manager_id = m.id"
@@ -362,11 +370,20 @@ const viewEmployeeByDepartment = async () => {
     },
   ]);
 
-  const departmentId = departmentList.find((department) => department.name === res.departmentName).id;
+  const departmentId = departmentList.find(
+    (department) => department.name === res.departmentName
+  ).id;
   const values = [departmentId];
-  const { rows } = await pool.query("SELECT CONCAT(e.first_name, ' ' ,e.last_name) AS name, r.title FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = $1", values);
+  const { rows } = await pool.query(
+    "SELECT CONCAT(e.first_name, ' ' ,e.last_name) AS name, r.title FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = $1",
+    values
+  );
   if (rows.length !== 0) {
-    console.log(`\n\n${"=".repeat(20)} ${colors.green(`EMPLOYEE TABLE of ${res.departmentName.toUpperCase()} DEPARTMENT`)} ${"=".repeat(20)}`);
+    console.log(
+      `\n\n${"=".repeat(20)} ${colors.green(
+        `EMPLOYEE TABLE of ${res.departmentName.toUpperCase()} DEPARTMENT`
+      )} ${"=".repeat(20)}`
+    );
     console.table(rows);
   } else {
     console.log(`${colors.yellow("NO DATA")}`);
@@ -385,11 +402,20 @@ const viewEmployeeByManager = async () => {
     },
   ]);
 
-  const managerId = employeeList.find((employee) => employee.name === res.managerName).id;
+  const managerId = employeeList.find(
+    (employee) => employee.name === res.managerName
+  ).id;
   const values = [managerId];
-  const { rows } = await pool.query("SELECT CONCAT(e.first_name, ' ', e.last_name) AS name, r.title FROM employees e JOIN roles r ON e.role_id = r.id WHERE e.manager_id = $1",values);
+  const { rows } = await pool.query(
+    "SELECT CONCAT(e.first_name, ' ', e.last_name) AS name, r.title FROM employees e JOIN roles r ON e.role_id = r.id WHERE e.manager_id = $1",
+    values
+  );
   if (rows.length !== 0) {
-    console.log(`\n\n${"=".repeat(20)} ${colors.green(`EMPLOYEE TABLE of ${res.managerName.toUpperCase()} MANAGER`)} ${"=".repeat(20)}`);
+    console.log(
+      `\n\n${"=".repeat(20)} ${colors.green(
+        `EMPLOYEE TABLE of ${res.managerName.toUpperCase()} MANAGER`
+      )} ${"=".repeat(20)}`
+    );
     console.table(rows);
   } else {
     console.log(`${colors.yellow("NO DATA")}`);
@@ -407,10 +433,20 @@ const viewTotalBuget = async () => {
       message: "Which department do you want to view?",
     },
   ]);
-  const departmentId = departmentList.find((department) => department.name === res.departmentName).id;
-  const employeeList = await pool.query(`SELECT CONCAT(e.first_name, ' ', e.last_name) AS name, r.title, r.salary FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = ${departmentId}`);
-  const totalBudget = await pool.query(`SELECT SUM(salary) AS budget FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = ${departmentId}`);
-  console.log(`\n\n${"=".repeat(20)} ${colors.green(`TOTAL BUDGET OF ${res.departmentName.toUpperCase()} DEPARTMENT`)} ${"=".repeat(20)}`);
+  const departmentId = departmentList.find(
+    (department) => department.name === res.departmentName
+  ).id;
+  const employeeList = await pool.query(
+    `SELECT CONCAT(e.first_name, ' ', e.last_name) AS name, r.title, r.salary FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = ${departmentId}`
+  );
+  const totalBudget = await pool.query(
+    `SELECT SUM(salary) AS budget FROM employees e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = ${departmentId}`
+  );
+  console.log(
+    `\n\n${"=".repeat(20)} ${colors.green(
+      `TOTAL BUDGET OF ${res.departmentName.toUpperCase()} DEPARTMENT`
+    )} ${"=".repeat(20)}`
+  );
 
   console.table(employeeList.rows);
   const formatter = new Intl.NumberFormat("en-US", {
@@ -492,6 +528,11 @@ const validateInputNumber = async (input) => {
   return true;
 };
 
+/**
+ * The main driver function that runs the application loop.
+ * It prompts the user with various options and calls the appropriate functions based on the selected option.
+ * The loop continues running until the user chooses to exit the application.
+ */
 const driver = async () => {
   let isRunning = true;
   while (isRunning) {
@@ -529,6 +570,5 @@ const driver = async () => {
   console.log(`${colors.green("Thank you for using my application.")}`);
   process.exit();
 };
-
 
 driver();
