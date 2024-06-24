@@ -5,7 +5,7 @@ const { Pool } = require("pg");
 let pool = null;
 
 const options = [
-  "Add Deperatment",
+  "Add Department",
   "Add Employee",
   "Add Role",
   "Delete Department",
@@ -565,7 +565,7 @@ const driver = async () => {
   while (isRunning) {
     console.log(greeting);
     const option = await getOption();
-    if (option === "Add Deperatment") {
+    if (option === "Add Department") {
       await addDepartment();
     } else if (option === "Add Employee") {
       await addEmployee();
