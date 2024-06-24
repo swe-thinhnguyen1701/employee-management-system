@@ -21,7 +21,8 @@ const options = [
   "View The Total Utilized Budge of A Department",
   "Exit",
 ];
-
+const greeting = `,${"-".repeat(50)}.\n|             ${colors.yellow("EMPLOYEE MANAGEMENT SYSTEM")}           |\n\`${"-".repeat(50)}'\n`;
+// console.log(greeting);
 const getOption = async () => {
   const res = await inquirer.prompt([
     {
@@ -53,7 +54,7 @@ const addDepartment = async () => {
     "INSERT INTO departments (name) VALUES ($1) RETURNING *",
     values
   );
-  console.log(rows[0]);
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew ${colors.yellow(rows[0].name)} is added.\n`);
 };
 
 /**
@@ -103,7 +104,7 @@ const addEmployee = async () => {
     "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4) RETURNING *",
     values
   );
-  console.log(rows[0]);
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew ${colors.yellow(`${rows[0].first_name} ${rows[0].last_name}`)} employee is added.\n`);
 };
 
 /**
@@ -140,7 +141,7 @@ const addRole = async () => {
     "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3) RETURNING *",
     values
   );
-  console.log(rows[0]);
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew ${colors.yellow(rows[0].title)} role is added.\n`);
 };
 
 const deleteDepartment = async () => {
@@ -162,25 +163,19 @@ const deleteDepartment = async () => {
       "SELECT r.title FROM roles r WHERE department_id = $1",
       values
     );
-    console.log("ROLES list: ", roles.rows);
     if (roles.rows.length > 0) {
-      console.log(
-        `\n${colors.red(
-          "Cannot delete a department that contains roles or employees."
-        )}\n`
-      );
+      console.log(`Status: ${colors.red("FAIL")}\nCannot delete a department that contains role(s)`);
       return;
     }
     await pool.query("DELETE FROM departments WHERE id = $1", values);
-    console.log(`${colors.green(res.departmentName)} is removed`);
+    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.departmentName)} is deleted`);
   } catch (error) {
-    console.log(`${colors.red("ERROR occurs while deleting!")}\n${error}`);
+    console.log(`Status: ${colors.red("FAIL")}\nERROR occurs while deleting!")}\n${error}`);
   }
 };
 
 const deleteEmployee = async () => {
   const employeeList = await getEmployeeList();
-  console.log(employeeList);
   employeeList.shift();
   const res = await inquirer.prompt([
     {
@@ -201,9 +196,9 @@ const deleteEmployee = async () => {
       values
     );
     await pool.query("DELETE FROM employees WHERE id = $1", values);
-    console.log(`${colors.green(res.employeeName)} is removed`);
+    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.employeeName)} is deleted`);
   } catch (error) {
-    console.log(`${colors.red("ERROR occurs while deleting!")}\n${error}`);
+    console.log(`Status: ${colors.red("FAIL")}\nERROR occurs while deleting!")}\n${error}`);
   }
 };
 
@@ -225,17 +220,14 @@ const deleteRole = async () => {
       "SELECT * FROM employees WHERE role_id = $1",
       values
     );
-    // console.log("EMPLOYEES list: ", employees.rows);
     if (employees.rows.length > 0) {
-      console.log(
-        `\n${colors.red("Cannot delete a role that contains employees.")}\n`
-      );
+      console.log(`Status: ${colors.red("FAIL")}\nCannot delete a department that contains employee(s)`);
       return;
     }
     await pool.query("DELETE FROM roles WHERE id = $1", values);
-    console.log(`${colors.green(res.roleName)} is removed`);
+    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.roleName)} is deleted`);
   } catch (error) {
-    console.log(`${colors.red("ERROR occurs while deleting!")}\n${error}`);
+    console.log(`Status: ${colors.red("FAIL")}\nERROR occurs while deleting!")}\n${error}`);
   }
 };
 
@@ -266,6 +258,11 @@ const updateEmployeeManager = async () => {
     },
   ]);
 
+  if(res.employeeName === "None") {
+    console.log(`Status: ${colors.yellow("WARNING!!")}\nNothing is updated`);
+    return
+  }
+
   const employeeId = employeeList.find(
     (employee) => employee.name === res.employeeName
   ).id;
@@ -273,11 +270,15 @@ const updateEmployeeManager = async () => {
     (employee) => employee.name === res.employeeManagerName
   ).id;
   const values = [managerId, employeeId];
-  const { rows } = await pool.query(
+  await pool.query(
     "UPDATE employees SET manager_id = $1 WHERE id = $2 RETURNING *",
     values
   );
-  console.log(rows[0]);
+  if(res.employeeManagerName === "None"){
+    console.log(`Status: ${colors.green("SUCCESS")}\nManager of ${colors.yellow(res.employeeName)} is removed`);
+    return;
+  }
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew manager of ${colors.yellow(res.employeeName)} is ${res.employeeManagerName}`);
 };
 
 /**
@@ -307,11 +308,11 @@ const updateEmployeeRole = async () => {
     (employee) => employee.name === res.employeeName
   ).id;
   const values = [roleId, employeeId];
-  const { rows } = await pool.query(
+  await pool.query(
     "UPDATE employees SET role_id = $1 WHERE id = $2 RETURNING *",
     values
   );
-  console.log(rows[0]);
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew role of ${colors.yellow(res.employeeName)} is ${res.employeeNewRole}`);
 };
 
 /**
@@ -562,6 +563,7 @@ const setUpPsql = async () => {
 const driver = async () => {
   let isRunning = await setUpPsql();
   while (isRunning) {
+    console.log(greeting);
     const option = await getOption();
     if (option === "Add Deperatment") {
       await addDepartment();
