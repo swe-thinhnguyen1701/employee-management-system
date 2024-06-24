@@ -7,6 +7,8 @@ The Employee Management System is a command-line interface (CLI) application bui
 - [Usage](#usage)
 - [Structure](#structure)
 - [Contributing](#contributing)
+- [Exceptions](#exceptions)
+- [Demo](#demo)
 
 ## Features
 * **Add Department:** Create a new department
@@ -78,7 +80,7 @@ When you run the application, you will be prompted with various options:
 * **Exit:** Exit the application.
 
 ## Structure
-* **app.js:** The main entry point of the application, which contains the main driver function.
+* **index.js:** The main entry point of the application, which contains the main driver function.
 * **Commands and Functions:** Functions to handle different CRUD operations and queries.
 * **Helper Functions:** Utility functions to fetch lists from the database and validate input.
 
@@ -89,3 +91,19 @@ When you run the application, you will be prompted with various options:
 4. Commit your changes (git commit -m 'Add new feature').
 5. Push to the branch (git push origin feature-branch).
 6. Open a pull request.
+
+## Exceptions
+```
+WHEN user enters wrong username or password of psql account.
+THEN system will display an error message on console.
+```
+![wrong username or password](./images/wrong-user-password.png)
+
+```
+WHEN user enters more than 30 characters of department name, role title, employee name.
+THEN the system will highlight input by red color and display an error message.
+```
+![Error message](./images/invalid-input.png)
+
+## Demo
+[![Play to watch](./images/demo-img.png)](https://youtu.be/1xu9ZWoP6eA)
