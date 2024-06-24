@@ -164,11 +164,11 @@ const deleteDepartment = async () => {
       values
     );
     if (roles.rows.length > 0) {
-      console.log(`Status: ${colors.red("FAIL")}\nCannot delete a department that contains role(s)`);
+      console.log(`Status: ${colors.red("FAIL")}\nCannot delete a department that contains role(s)\n`);
       return;
     }
     await pool.query("DELETE FROM departments WHERE id = $1", values);
-    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.departmentName)} is deleted`);
+    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.departmentName)} is deleted\n`);
   } catch (error) {
     console.log(`Status: ${colors.red("FAIL")}\nERROR occurs while deleting!")}\n${error}`);
   }
@@ -196,7 +196,7 @@ const deleteEmployee = async () => {
       values
     );
     await pool.query("DELETE FROM employees WHERE id = $1", values);
-    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.employeeName)} is deleted`);
+    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.employeeName)} is deleted\n`);
   } catch (error) {
     console.log(`Status: ${colors.red("FAIL")}\nERROR occurs while deleting!")}\n${error}`);
   }
@@ -221,11 +221,11 @@ const deleteRole = async () => {
       values
     );
     if (employees.rows.length > 0) {
-      console.log(`Status: ${colors.red("FAIL")}\nCannot delete a department that contains employee(s)`);
+      console.log(`Status: ${colors.red("FAIL")}\nCannot delete a role that contains employee(s)\n`);
       return;
     }
     await pool.query("DELETE FROM roles WHERE id = $1", values);
-    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.roleName)} is deleted`);
+    console.log(`Status: ${colors.green("SUCCESS")}\n${colors.yellow(res.roleName)} is deleted\n`);
   } catch (error) {
     console.log(`Status: ${colors.red("FAIL")}\nERROR occurs while deleting!")}\n${error}`);
   }
@@ -259,7 +259,7 @@ const updateEmployeeManager = async () => {
   ]);
 
   if(res.employeeName === "None") {
-    console.log(`Status: ${colors.yellow("WARNING!!")}\nNothing is updated`);
+    console.log(`Status: ${colors.yellow("WARNING!!")}\nNothing is updated\n`);
     return
   }
 
@@ -275,10 +275,10 @@ const updateEmployeeManager = async () => {
     values
   );
   if(res.employeeManagerName === "None"){
-    console.log(`Status: ${colors.green("SUCCESS")}\nManager of ${colors.yellow(res.employeeName)} is removed`);
+    console.log(`Status: ${colors.green("SUCCESS")}\nManager of ${colors.yellow(res.employeeName)} is removed\n`);
     return;
   }
-  console.log(`Status: ${colors.green("SUCCESS")}\nNew manager of ${colors.yellow(res.employeeName)} is ${res.employeeManagerName}`);
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew manager of ${colors.yellow(res.employeeName)} is ${res.employeeManagerName}\n`);
 };
 
 /**
@@ -312,7 +312,7 @@ const updateEmployeeRole = async () => {
     "UPDATE employees SET role_id = $1 WHERE id = $2 RETURNING *",
     values
   );
-  console.log(`Status: ${colors.green("SUCCESS")}\nNew role of ${colors.yellow(res.employeeName)} is ${res.employeeNewRole}`);
+  console.log(`Status: ${colors.green("SUCCESS")}\nNew role of ${colors.yellow(res.employeeName)} is ${res.employeeNewRole}\n`);
 };
 
 /**
